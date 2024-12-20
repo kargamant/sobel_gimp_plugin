@@ -40,7 +40,6 @@ query (void)
 typedef struct
 {
 	float multiplier;
-	int gr1[3][3];
-	int gr2[3][3];
 	short brightness;
+	short gradient_abs;
 }SobelParams;

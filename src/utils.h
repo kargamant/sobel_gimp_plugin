@@ -2,7 +2,7 @@
 #include <libgimp/gimp.h>
 #include "buff.h"
 
-void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3]);
+void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3], float multiplier);
 
 void convolution(GimpPixelRgn* rgin, Buff* buff_out, int channels, int matr[3][3], float multiplier, float (*brightness)(int, int, int));
 

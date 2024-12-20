@@ -108,7 +108,7 @@ void delete_border(GimpPixelRgn* rgout, int channels)
 	buff_free(buff);
 }
 
-void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3])
+void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3], float multiplier)
 {
 	gint x1, y1, x2, y2;
 	gimp_drawable_mask_bounds(dr->drawable_id, &x1, &y1, &x2, &y2);
@@ -121,10 +121,9 @@ void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3])
 	Buff* buff_out1 = buff_init(&rgin, channels);
 	Buff* buff_out2 = buff_init(&rgin, channels);
 	
-	convolution(&rgin, buff_out1, channels, gr1, 0.03, &brightness_humanized);
-	convolution(&rgin, buff_out2, channels, gr2, 0.03, &brightness_humanized);
+	convolution(&rgin, buff_out1, channels, gr1, multiplier, &brightness_humanized);
+	convolution(&rgin, buff_out2, channels, gr2, multiplier, &brightness_humanized);
 	gradient_add(buff_out1, buff_out2, &rgout, channels, &brightness_humanized, &gradient_abs);
-	printf("\ndeleting border\n");
 	delete_border(&rgout, channels);
 	
 	buff_free(buff_out1);
