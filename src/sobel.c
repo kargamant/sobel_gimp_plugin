@@ -13,18 +13,29 @@ run (const gchar *name, gint nparams, const GimpParam  *param, gint *nreturn_val
 
 	GimpDrawable* drawable = gimp_drawable_get(param[2].data.d_drawable);
 	
-	int matr[3][3];
-	matr[0][0]=0;
-	matr[0][1]=-1;
-	matr[0][2]=0;
-	matr[1][0]=-1;
-	matr[1][1]=5;
-	matr[1][2]=-1;
-	matr[2][0]=0;
-	matr[2][1]=-1;
-	matr[2][2]=0;
+	int matr1[3][3];
+	matr1[0][0]=-1;
+	matr1[0][1]=-2;
+	matr1[0][2]=-1;
+	matr1[1][0]=0;
+	matr1[1][1]=0;
+	matr1[1][2]=0;
+	matr1[2][0]=1;
+	matr1[2][1]=2;
+	matr1[2][2]=1;
 
-	sobel(drawable, matr, NULL);
+	int matr2[3][3];
+	matr2[0][0]=1;
+	matr2[0][1]=0;
+	matr2[0][2]=-1;
+	matr2[1][0]=2;
+	matr2[1][1]=0;
+	matr2[1][2]=-2;
+	matr2[2][0]=1;
+	matr2[2][1]=0;
+	matr2[2][2]=-1;
+
+	sobel(drawable, matr1, matr2);
 
 	gimp_displays_flush();
 	gimp_drawable_detach(drawable);
