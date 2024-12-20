@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include "widget.h"
+#include <string.h>
 
 gboolean sobel_dialogue(SobelParams* params)
 {
@@ -46,34 +47,57 @@ gboolean sobel_dialogue(SobelParams* params)
 	gtk_widget_show (main_hbox);
 	gtk_container_add (GTK_CONTAINER (alignment), main_hbox);
 
+	// multiplier field
 	multiplier_label = gtk_label_new_with_mnemonic ("_Multiplier:");
 	gtk_widget_show (multiplier_label);
 	gtk_box_pack_start (GTK_BOX (main_hbox), multiplier_label, FALSE, FALSE, 6);
 	gtk_label_set_justify (GTK_LABEL (multiplier_label), GTK_JUSTIFY_RIGHT);
 
-	/*spinbutton_adj_multiplier = gtk_adjustment_new (3, 1, 1000, 1, 5, 5);
-	spinbutton_multiplier = gtk_spin_button_new (GTK_ADJUSTMENT (spinbutton_adj_multiplier), 1, 0);
-	gtk_widget_show (spinbutton_multiplier);
-	gtk_box_pack_start (GTK_BOX (main_hbox), spinbutton_multiplier, FALSE, FALSE, 6);
-	gtk_spin_button_set_numeric (GTK_SPIN_BUTTON (spinbutton_multiplier), TRUE);
+	GtkWidget *multiplier_entry = gtk_entry_new();
+	gtk_entry_set_text(GTK_ENTRY(multiplier_entry), "0.0");
+	gtk_widget_show(multiplier_entry);
+	gtk_box_pack_start (GTK_BOX (main_hbox), multiplier_entry, FALSE, FALSE, 6);
 
-	g_signal_connect (spinbutton_adj_multiplier, "value_changed",
-								  G_CALLBACK (gimp_int_adjustment_update),
-												  &params->multiplier);*/
-	GtkWidget *float_entry = gtk_entry_new();
-	gtk_entry_set_text(GTK_ENTRY(float_entry), "0.0");
-	gtk_widget_show(float_entry);
-	gtk_box_pack_start (GTK_BOX (main_hbox), float_entry, FALSE, FALSE, 6);
+	// brightness metric choice
+	GtkWidget *brightness_combo = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (brightness_combo), "brightness_average");
+	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (brightness_combo), "brightness_humanized");
+	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (brightness_combo), "none");
+	gtk_combo_box_set_active (GTK_COMBO_BOX (brightness_combo), 0);
+	gtk_widget_show(brightness_combo);
+	gtk_box_pack_start (GTK_BOX (main_hbox), brightness_combo, FALSE, FALSE, 6);
+
+	// gradient metric choice
+	GtkWidget *gradient_combo = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (gradient_combo), "gradient_abs");
+	gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (gradient_combo), "gradient_sqrt");
+	gtk_combo_box_set_active (GTK_COMBO_BOX (gradient_combo), 0);
+	gtk_widget_show(gradient_combo);
+	gtk_box_pack_start (GTK_BOX (main_hbox), gradient_combo, FALSE, FALSE, 6);
 
 	gtk_widget_show (dialog);
 
 	run = (gimp_dialog_run (GIMP_DIALOG (dialog)) == GTK_RESPONSE_OK);
 
-	const gchar *text = gtk_entry_get_text(GTK_ENTRY(float_entry));
+	const gchar *text = gtk_entry_get_text(GTK_ENTRY(multiplier_entry));
 	char *endptr;
 	params->multiplier = strtof(text, &endptr);
 	
-	printf("params: %f\n", params->multiplier);
+	gchar *selected_brightness = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(brightness_combo));
+	if(strcmp(selected_brightness, "brightness_average") == 0)
+		params->brightness = AVERAGE;
+	else if(strcmp(selected_brightness, "brightness_humanized") == 0)
+		params->brightness = HUMANIZED;
+	else
+		params->brightness = NONE;
+
+	gchar *selected_gradient = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(gradient_combo));
+	if(strcmp(selected_gradient, "gradient_abs") == 0)
+		params->gradient = ABS;
+	else
+		params->gradient = SQRT;
+
+	printf("params: %f, %d, %d\n", params->multiplier, params->brightness, params->gradient);
 
 	gtk_widget_destroy (dialog);
 

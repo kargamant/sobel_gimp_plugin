@@ -37,9 +37,24 @@ query (void)
 	gimp_plugin_menu_register ("plug-in-sobel", "<Image>/Filters/MyFilters"); 
 }
 
+typedef enum brightness_metric
+{
+	NONE,
+	AVERAGE,
+	HUMANIZED
+}brightness_metric;
+
+typedef enum gradient_metric
+{
+	ABS,
+	SQRT
+}gradient_metric;
+
+
 typedef struct
 {
 	float multiplier;
-	short brightness;
-	short gradient_abs;
+	brightness_metric brightness;
+	gradient_metric gradient;
 }SobelParams;
+
