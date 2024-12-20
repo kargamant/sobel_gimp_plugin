@@ -37,3 +37,10 @@ query (void)
 	gimp_plugin_menu_register ("plug-in-sobel", "<Image>/Filters/MyFilters"); 
 }
 
+typedef struct
+{
+	float multiplier;
+	int gr1[3][3];
+	int gr2[3][3];
+	short brightness;
+}SobelParams;

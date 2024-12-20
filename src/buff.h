@@ -15,4 +15,8 @@ guchar buff_get_pixel_channel(Buff* buff, int i, int j, int c); // i - row numbe
 
 void buff_set_pixel_channel(Buff* buff, int i, int j, int c, int new_c); // i - row number, j - column number
 
+void buff_set_pixel(Buff* buff, int i, int j, int r, int g, int b);
+
+float buff_get_pixel_brightness(Buff* buff, int i, int j, float (*brightness)(int, int, int));
+
 void buff_free(Buff* buff);

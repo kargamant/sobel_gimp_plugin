@@ -23,15 +23,10 @@ void convolution(GimpPixelRgn* rgin, Buff* buff_out, int channels, int matr[3][3
 				{
 					for(int m_j=0; m_j<3; m_j++)
 					{
-						int r = buff_get_pixel_channel(buff_in, i+(m_i-1), j+(m_j-1), 0);
-						int g = buff_get_pixel_channel(buff_in, i+(m_i-1), j+(m_j-1), 1);
-						int b = buff_get_pixel_channel(buff_in, i+(m_i-1), j+(m_j-1), 2);
-						output += multiplier * matr[m_i][m_j]*brightness(r, g, b);
+						output += multiplier * matr[m_i][m_j]*buff_get_pixel_brightness(buff_in, i+(m_i-1), j+(m_j-1), brightness);
 					}
 				}
-				buff_set_pixel_channel(buff_out, i, j, 0, output);
-				buff_set_pixel_channel(buff_out, i, j, 1, output);
-				buff_set_pixel_channel(buff_out, i, j, 2, output);
+				buff_set_pixel(buff_out, i, j, output, output, output);
 			}
 			else
 			{
@@ -68,16 +63,49 @@ void gradient_add(Buff* buff1, Buff* buff2, GimpPixelRgn* rgout,  int channels, 
 	{
 		for(int j=0; j<w; j++)
 		{
-			for(int k=0; k<channels; k++)
+			if(brightness)
 			{
-				guchar gr1 = buff_get_pixel_channel(buff1, i, j, k);
-				guchar gr2 = buff_get_pixel_channel(buff2, i, j, k);
-				buff_set_pixel_channel(buff_out, i, j, k, gradient(gr1, gr2));
+				float br1 = buff_get_pixel_brightness(buff1, i, j, brightness);
+				float br2 = buff_get_pixel_brightness(buff2, i, j, brightness);
+
+				float gr=gradient(br1, br2);
+				buff_set_pixel(buff_out, i, j, gr, gr, gr);
+			}
+			else
+			{
+				for(int k=0; k<channels; k++)
+				{
+					guchar gr1 = buff_get_pixel_channel(buff1, i, j, k);
+					guchar gr2 = buff_get_pixel_channel(buff2, i, j, k);
+					buff_set_pixel_channel(buff_out, i, j, k, gradient(gr1, gr2));
+				}
 			}
 		}
 	}
 	gimp_pixel_rgn_set_rect(rgout, buff_out->buff, rgout->x, rgout->y, rgout->w, rgout->h);
 	buff_free(buff_out);
+}
+
+void delete_border(GimpPixelRgn* rgout, int channels)
+{
+	Buff* buff = buff_init(rgout, channels);
+
+	int w=buff->w;
+	int h=buff->h;
+	for(int j=0; j<w-1; j++)
+	{
+		//printf("\nj: %d / %d\n", j, w);
+		buff_set_pixel(buff, 0, j, 0, 0, 0);
+		buff_set_pixel(buff, h-1, j, 0, 0, 0);
+	}
+
+	for(int i=0; i<h-1; i++)
+	{
+		buff_set_pixel(buff, i, 0, 0, 0, 0);
+		buff_set_pixel(buff, i, w-1, 0, 0, 0);
+	}
+	gimp_pixel_rgn_set_rect(rgout, buff->buff, rgout->x, rgout->y, rgout->w, rgout->h);
+	buff_free(buff);
 }
 
 void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3])
@@ -93,9 +121,11 @@ void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3])
 	Buff* buff_out1 = buff_init(&rgin, channels);
 	Buff* buff_out2 = buff_init(&rgin, channels);
 	
-	convolution(&rgin, buff_out1, channels, gr1, 0.11, &brightness_humanized);
-	convolution(&rgin, buff_out2, channels, gr2, 0.11, &brightness_humanized);
+	convolution(&rgin, buff_out1, channels, gr1, 0.03, &brightness_humanized);
+	convolution(&rgin, buff_out2, channels, gr2, 0.03, &brightness_humanized);
 	gradient_add(buff_out1, buff_out2, &rgout, channels, &brightness_humanized, &gradient_abs);
+	printf("\ndeleting border\n");
+	delete_border(&rgout, channels);
 	
 	buff_free(buff_out1);
 	buff_free(buff_out2);
