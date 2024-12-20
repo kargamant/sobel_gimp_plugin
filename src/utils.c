@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <stdlib.h>
+#include "buff.h"
 
 float brightness(int r, int g, int b)
 {
@@ -12,40 +13,7 @@ float brightness_humanized(int r, int g, int b)
 	return 0.21*r + 0.72*g + 0.07*b;
 }
 
-Buff* buff_init(GimpPixelRgn* rgn, int channels)
-{
-	guchar* buff=g_new(guchar, rgn->h*rgn->w*channels);
-	gimp_pixel_rgn_get_rect(rgn, buff, rgn->x, rgn->y, rgn->w, rgn->h);
-	
-	Buff* bf = (Buff*)malloc(sizeof(Buff));
-	bf->buff=buff;
-	bf->w=rgn->w;
-	bf->h=rgn->h;
-	bf->c=channels;
-	return bf;
-}
-
-guchar buff_get_pixel_channel(Buff* buff, int i, int j, int c)
-{
-	return buff->buff[(i*buff->w+j)*buff->c + c];
-}
-
-void buff_set_pixel_channel(Buff* buff, int i, int j, int c, int new_c)
-{
-	buff->buff[(i*buff->w+j)*buff->c + c] = new_c;
-}
-
-void buff_free(Buff* buff)
-{
-	if(buff)
-	{
-		g_free(buff->buff);
-		free(buff);
-		buff=NULL;
-	}
-}
-
-void convolution(GimpPixelRgn* rgin, GimpPixelRgn* rgout, int channels, int** matr, float (*brightness)(int, int, int))
+void convolution(GimpPixelRgn* rgin, GimpPixelRgn* rgout, int channels, int matr[3][3], float (*brightness)(int, int, int))
 {
 	if(rgin->w!=rgout->w || rgin->h!=rgout->h)
 		return;
@@ -53,9 +21,9 @@ void convolution(GimpPixelRgn* rgin, GimpPixelRgn* rgout, int channels, int** ma
 	Buff* buff_in = buff_init(rgin, channels);
 	Buff* buff_out = buff_init(rgin, channels);
 
-	for(int i=1; i<rgin->h-1; j++)
+	for(int i=1; i<rgin->h-1; i++)
 	{
-		for(int j=1; j<rgin->w-1; i++)
+		for(int j=1; j<rgin->w-1; j++)
 		{
 			for(int k=0; k<channels; k++)
 			{
@@ -75,3 +43,32 @@ void convolution(GimpPixelRgn* rgin, GimpPixelRgn* rgout, int channels, int** ma
 	buff_free(buff_in);
 	buff_free(buff_out);
 }
+
+void sobel(GimpDrawable* dr, int gr1[3][3], int gr2[3][3])
+{
+	gint x1, y1, x2, y2;
+	gimp_drawable_mask_bounds(dr->drawable_id, &x1, &y1, &x2, &y2);
+	int channels = gimp_drawable_bpp(dr->drawable_id);
+
+	GimpPixelRgn rgin, rgout;
+	gimp_pixel_rgn_init(&rgin, dr, 0, 0, x2-x1, y2-y1, FALSE, FALSE);
+	gimp_pixel_rgn_init(&rgout, dr, 0, 0, x2-x1, y2-y1, TRUE, FALSE);
+	
+	convolution(&rgin, &rgout, channels, gr1, NULL);
+	gimp_drawable_flush(dr);
+	gimp_drawable_update(dr->drawable_id, x1, y1, x2-x1, y2-y1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
